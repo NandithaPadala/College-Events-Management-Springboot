@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Event Registrations</title>
+	<link rel="stylesheet" th:href="@{/css/styles.css}">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		/* Status badge styles */
+		.status-badge {
+			display: inline-block;
+			padding: 4px 10px;
+			border-radius: 12px;
+			font-weight: 600;
+			font-size: 0.9rem;
+		}
+
+		.status-approved {
+			background-color: #28a745;
+			color: white;
+		}
+
+		.status-pending {
+			background-color: #ffc107;
+			color: black;
+		}
+
+		.status-rejected {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.status-default {
+			background-color: #e0e0e0;
+			color: black;
+		}
+	</style>
+</head>
+
+<body class="bg-light">
+
+	<!-- Header -->
+	<nav class="navbar gradient-nav text-black p-3">
+		<div class="container">
+			<h2 class="mb-0">Registrations for Event</h2>
+		</div>
+	</nav>
+
+	<!-- Page Content -->
+	<div class="container my-5 animate-fade-in-up">
+		<div class="card gradient-border p-4 shadow-lg">
+			<h3 class="text-center mb-4 fw-bold text-primary">Registered Participants</h3>
+
+			<div th:if="${#lists.isEmpty(registrations)}" class="text-center">
+				<p class="text-muted fs-5">No registrations found for this event yet.</p>
+
+				<button>
+					<a th:href="@{/events/{id}/registrations/pending(id=${event.id})}" class="btn btn-warning">
+						View Pending Only
+					</a>
+
+				</button>
+			</div>
+
+
+
+			<div th:unless="${#lists.isEmpty(registrations)}" class="table-responsive">
+				<table class="table align-middle text-center">
+					<thead class="table-light">
+						<tr>
+							<th>Participant Name</th>
+							<th>Email</th>
+							<th>Status</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="reg : ${registrations}">
+							<td th:text="${reg.user.username}"></td>
+							<td th:text="${reg.user.email}"></td>
+							<td>
+								<span class="status-badge" th:id="'status-' + ${reg.id}"
+									th:text="${reg.status != null ? reg.status : 'N/A'}" th:classappend="${reg.status == 'APPROVED' ? 'status-approved' :
+                                                      (reg.status == 'PENDING' ? 'status-pending' :
+                                                      (reg.status == 'REJECTED' ? 'status-rejected' :
+                                                      'status-default'))}">
+								</span>
+
+							</td>
+							<td>
+								<form th:action="@{'/registrations/' + ${reg.id} + '/update-status'}" method="post"
+									class="d-inline">
+									<select name="status" class="form-select form-select-sm d-inline w-auto">
+										<option value="PENDING" th:selected="${reg.status == 'PENDING'}">Pending
+										</option>
+										<option value="APPROVED" th:selected="${reg.status == 'APPROVED'}">Approved
+										</option>
+										<option value="REJECTED" th:selected="${reg.status == 'REJECTED'}">Rejected
+										</option>
+									</select>
+									<button type="submit" class="btn btn-gradient-primary btn-sm ms-2">Update</button>
+								</form>
+
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="text-center mt-4">
+				<a th:href="@{/events}" class="btn btn-gradient-primary btn-lg ms-2"><i class="fas fa-arrow-left me-2"></i>Back to events</a>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		async function updateStatus(event, regId) {
+			event.preventDefault();
+			const selectedStatus = document.getElementById(`statusSelect-${regId}`).value;
+
+			try {
+				const response = await fetch('/events/registrations/updateStatus', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					body: `registrationId=${regId}&status=${selectedStatus}`
+				});
+
+				if (response.ok) {
+					const badge = document.getElementById(`status-${regId}`);
+					badge.textContent = selectedStatus;
+
+					// Reset classes
+					badge.className = 'status-badge';
+
+					if (selectedStatus === 'APPROVED') badge.classList.add('status-approved');
+					else if (selectedStatus === 'PENDING') badge.classList.add('status-pending');
+					else if (selectedStatus === 'REJECTED') badge.classList.add('status-rejected');
+					else badge.classList.add('status-default');
+				} else {
+					alert("Failed to update status. Try again.");
+				}
+			} catch (error) {
+				console.error("Error updating status:", error);
+				alert("An error occurred while updating the status.");
+			}
+		}
+	</script>
+
+</body>
+
+</html>

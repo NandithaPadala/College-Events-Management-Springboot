@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<link rel="stylesheet" th:href="@{/css/styles.css}">
+
+<head>
+	<title th:text="${event.title}">Event Details</title>
+</head>
+
+<body>
+	<section class="py-5">
+		<div class="container">
+			<div class="row justify-content-center animate-fade-in-up">
+				<div class="col-lg-8">
+					<div class="card gradient-border p-4">
+						<div class="event-header text-center mb-4">
+							<h2 class="fw-bold" th:text="${event.title}">Event Title</h2>
+							<p class="text-muted" th:text="${#temporals.format(event.eventDate, 'dd MMM yyyy HH:mm')}">
+								Date</p>
+						</div>
+
+						<div class="event-image mb-4 text-center" th:if="${event.imageUrl}">
+							<img th:src="${event.imageUrl}" class="img-fluid rounded shadow" alt="Event Image"
+								style="max-height: 400px;">
+						</div>
+
+						<div class="event-details mb-3">
+							<h5 class="mb-2"><i class="fas fa-info-circle text-primary"></i> Description</h5>
+							<p th:text="${event.description}">Event description goes here...</p>
+						</div>
+
+						<div class="event-meta mb-3">
+							<p><i class="fas fa-map-marker-alt text-danger me-2"></i>
+								<strong>Venue:</strong> <span th:text="${event.venue}">College Auditorium</span>
+							</p>
+							<p><i class="fas fa-users text-success me-2"></i>
+								<strong>Maximum Participants:</strong> <span
+									th:text="${event.maxParticipants}">100</span>
+							</p>
+							<p><i class="fas fa-user text-info me-2"></i>
+								<strong>Created by:</strong> <span th:text="${event.createdBy.fullName}">Admin</span>
+							</p>
+						</div>
+
+
+						<div class="event-actions text-center">
+
+
+							<th:block th:if="${(isCreator or isAdmin) ?:false}">
+								<p class="info-text">You are the organizer of this event.</p>
+
+								<!-- Only show this if the logged-in user is the event creator -->
+								<div>
+									<form th:action="@{'/events/' + ${event.id} + '/registrations'}"
+										class="register-btn" style="margin-top: 15px;" method="get">
+										<button type="submit" class="btn btn-gradient-primary">Manage
+											Registrations</button>
+
+									</form>
+								</div>
+
+							</th:block>
+
+
+
+							<!-- Hide button for event creator -->
+							<th:block th:if="${!(isCreator or isAdmin)?:false}">
+
+								<!-- If user is already registered -->
+								<th:block th:if="${(isRegistered)?:false}">
+									<p class="status-message">
+										✅ You are registered for this event.
+										<strong>Status:</strong> <span th:text="${registrationStatus}"></span>
+									</p>
+									<form th:action="@{'/registrations/' + ${registrationId} + '/cancel'}"
+										method="post">
+										<button type="submit" class="btn btn-danger">Cancel Registration</button>
+									</form>
+								</th:block>
+
+								<!-- If user is not registered -->
+								<th:block th:if="${!(isRegistered)?:false}">
+									<form th:action="@{'/events/' + ${event.id} + '/register'}" method="post">
+										<button type="submit" class="btn btn-gradient-primary"><i
+												class="fas fa-edit me-2"></i>Register Now</button>
+									</form>
+								</th:block>
+
+							</th:block>
+
+
+
+
+
+						</div>
+						<div class="text-center mt-4">
+							<a th:href="@{/events}" class="btn btn-gradient-primary btn-lg ms-2"><i
+									class="fas fa-arrow-left me-2"></i>Back to events</a>
+						</div>
+					</div>
+				</div>
+			</div>
+	</section>
+</body>
+
+</html>
